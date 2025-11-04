@@ -4,19 +4,22 @@ on:
   push:
     branches:
       - main
-    # Optional: run on merge commits to non-main branches
-    # Add filters if needed
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # daily at midnight UTC
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
 
 jobs:
   test-job:
+    name: Run Tests and Lint
     runs-on: ubuntu-latest
+
     env:
       IDM_SYSTEM: "192.168.3.182"
       NPM_REGISTRY: "http://ubr-barrel:8081/repository/npm-idm/"
+      NODE_TLS_REJECT_UNAUTHORIZED: 0
+      JEST_JUNIT_OUTPUT: ./junit.xml
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,13 +31,18 @@ jobs:
           registry-url: ${{ env.NPM_REGISTRY }}
 
       - name: Install dependencies
-        run: node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
+        run: |
+          npm config set registry $NPM_REGISTRY
+          node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
 
       - name: Run tests
-        run: npm run all:ci
+        run: npm run test:ci
 
       - name: Run linter
         run: npm run lint
+
+      - name: List workspace files (debug)
+        run: find . -name "junit.xml"
 
       - name: Upload JUnit test results
         if: always()
