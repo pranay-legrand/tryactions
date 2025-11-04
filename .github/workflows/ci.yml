@@ -7,7 +7,7 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight UTC
+    - cron: '0 0 * * *' # Daily at midnight UTC
 
 jobs:
   test-job:
@@ -30,10 +30,11 @@ jobs:
           node-version: '20'
           registry-url: ${{ env.NPM_REGISTRY }}
 
+      - name: Configure NPM registry
+        run: npm config set registry $NPM_REGISTRY
+
       - name: Install dependencies
-        run: |
-          npm config set registry $NPM_REGISTRY
-          node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
+        run: npm install --prefer-online
 
       - name: Run tests
         run: npm run test:ci
@@ -41,7 +42,7 @@ jobs:
       - name: Run linter
         run: npm run lint
 
-      - name: List workspace files (debug)
+      - name: Verify JUnit report exists
         run: find . -name "junit.xml"
 
       - name: Upload JUnit test results
