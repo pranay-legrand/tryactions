@@ -1,0 +1,51 @@
+{
+  "name": "idm_black_box_tests",
+  "version": "1.0.0",
+  "description": "IDM Demo System Tests",
+  "main": "index.js",
+  "scripts": {
+    "init": "",
+    "clean": "rm -rf client",
+    "clean:all": "rm -rf client package-lock.json node_modules",
+    "all": "npm run download:APIs && npm run generate:clients && npm run test",
+    "all:ci": "npm run download:APIs && npm run generate:clients && npm run test:ci",
+    "download:APIs": "./utils/download_apis.sh",
+    "generate:clients": "./utils/generate_clients.sh",
+    "start": "npm run all",
+    "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest",
+    "test:ci": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest --ci --reporters=default --reporters=jest-junit",
+    "lint": "npx eslint tests/ --max-warnings 0",
+    "getName": "echo $npm_package_name",
+    "getVersion": "echo $npm_package_version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "gitlab@repository.rz.raritan.com:lap/idm/idm_black_box_tests.git"
+  },
+  "repository_mirror_url": "git@github.com:Raritan/idm_black_box_tests.git",
+  "keywords": [
+    "IDM",
+    "demo",
+    "tests"
+  ],
+  "author": "Legrand",
+  "license": "ISC",
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@openapitools/openapi-generator-cli": "^2.23.4",
+    "@types/node": "^22.5.3",
+    "@types/request": "^2.48.12",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint-plugin-jsdoc": "^48.2.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint": "^9.10.0",
+    "globals": "^15.8.0",
+    "jest-junit": "^16.0.0",
+    "jest": "^29.7.0",
+    "request": "^2.88.2",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript-eslint": "^8.0.0",
+    "typescript": "5.3.3"
+  }
+}

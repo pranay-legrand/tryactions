@@ -1,0 +1,38 @@
+# variables to control pipeline behavior and external services
+variables:
+  IDM_SYSTEM: "192.168.3.182"
+  NPM_REGISTRY: "http://ubr-barrel:8081/repository/npm-idm/"
+
+# stages in the pipeline, executed in the listed order
+stages:
+  - test
+
+# default configuration for all jobs: runner tag to select appropriate GitLab CI runners
+default:
+  tags:
+    - idm
+
+# reusable rules for triggering jobs under specific conditions
+.standard-rules:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'schedule'
+    - if: $CI_PIPELINE_SOURCE == 'web'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH && $CI_COMMIT_MESSAGE =~ /Merge branch/'
+
+# jobs in the pipeline
+test-job:
+  extends:
+    - .standard-rules           # reuse `.standard-rules` configuration here
+  stage: test
+  script:
+    - node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
+    - npm run all:ci
+    - npm run lint
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - junit.xml
+    expire_in: 1 week
