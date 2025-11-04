@@ -1,48 +1,83 @@
-name: CI Pipeline
+name: CI/CD Test Pipeline
 
+# Triggers for the workflow, equivalent to the .standard-rules
 on:
-  workflow_dispatch:
+  # Equivalent to: CI_PIPELINE_SOURCE == 'merge_request_event'
+  pull_request:
+    branches:
+      - '**'
+
+  # Equivalent to: CI_PIPELINE_SOURCE == 'schedule'
+  schedule:
+    # You would replace this with a cron expression if a fixed schedule is needed
+    - cron: '0 0 * * *' 
+
+  # Equivalent to: CI_PIPELINE_SOURCE == 'web' or 'push' on default branch
+  push:
+    branches:
+      # This assumes your default branch is 'main'. Adjust if needed.
+      - main 
+
+# Global environment variables
+env:
+  IDM_SYSTEM: '192.168.3.182'
+  NPM_REGISTRY: 'http://ubr-barrel:8081/repository/npm-idm/'
 
 jobs:
   test-job:
-    name: Run Tests and Lint
+    # Equivalent to: tags: [idm]. Use a self-hosted runner label if required, 
+    # otherwise use a GitHub-hosted runner like 'ubuntu-latest'.
+    # If you need to use a self-hosted runner tagged 'idm', use: runs-on: [self-hosted, idm]
     runs-on: ubuntu-latest
-
-    env:
-      IDM_SYSTEM: "192.168.3.182"
-      NPM_REGISTRY: "http://ubr-barrel:8081/repository/npm-idm/"
-      NODE_TLS_REJECT_UNAUTHORIZED: 0
-      JEST_JUNIT_OUTPUT: ./junit.xml
-
+    
     steps:
-      - name: Checkout code
+      # Step 1: Check out code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      # Step 2: Set up Node.js environment
+      - name: Setup Node.js
+        # You may need to specify the exact node version used in your GitLab runner
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          registry-url: ${{ env.NPM_REGISTRY }}
+          node-version: '20' # Example Node version
 
-      - name: Configure NPM registry
-        run: npm config set registry $NPM_REGISTRY
+      # Step 3: Configure Custom npm Registry
+      # This step creates a temporary .npmrc file to use the custom registry for installation
+      - name: Configure Custom NPM Registry
+        run: |
+          echo "registry=${{ env.NPM_REGISTRY }}" > .npmrc
+          # Assuming the registry doesn't require auth, if it does, you'd add:
+          # echo "//ubr-barrel:8081/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> .npmrc
 
-      - name: Install dependencies
-        run: npm install --prefer-online
-
-      - name: Run tests
-        run: npm run test:ci
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Verify JUnit report exists
-        run: find . -name "junit.xml"
-
-      - name: Upload JUnit test results
-        if: always()
-        uses: actions/upload-artifact@v4
+      # Step 4: Install Dependencies (with memory adjustment)
+      # The Node memory flag is passed directly to the run command.
+      # 'npm install --prefer-online' is roughly equivalent to 'npm install' in a fresh env
+      - name: Install Dependencies
+        run: node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
+        
+      # Step 5: Run CI and Lint Scripts
+      - name: Run All CI and Lint Scripts
+        run: |
+          npm run all:ci
+          npm run lint
+          
+      # Step 6: Upload Test Results (Equivalent to artifacts:reports:junit)
+      # This action processes the JUnit XML file and displays the results in the GitHub UI.
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always() # Run even if previous steps failed (equivalent to artifacts:when:always)
         with:
-          name: junit-results
+          name: Jest Tests # The name for the summary tab
+          path: junit.xml # The path to the JUnit XML file
+          reporter: jest-junit
+
+      # Step 7: Upload the raw artifacts
+      # Equivalent to artifacts:paths and expire_in
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-artifacts
           path: junit.xml
-          retention-days: 7
+          retention-days: 7 # Equivalent to expire_in: 1 week
