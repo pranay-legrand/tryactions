@@ -2,21 +2,7 @@ name: CI/CD Test Pipeline
 
 # Triggers for the workflow, equivalent to the .standard-rules
 on:
-  # Equivalent to: CI_PIPELINE_SOURCE == 'merge_request_event'
-  pull_request:
-    branches:
-      - '**'
-
-  # Equivalent to: CI_PIPELINE_SOURCE == 'schedule'
-  schedule:
-    # You would replace this with a cron expression if a fixed schedule is needed
-    - cron: '0 0 * * *' 
-
-  # Equivalent to: CI_PIPELINE_SOURCE == 'web' or 'push' on default branch
-  push:
-    branches:
-      # This assumes your default branch is 'main'. Adjust if needed.
-      - main 
+  workflow_dispatch:
 
 # Global environment variables
 env:
