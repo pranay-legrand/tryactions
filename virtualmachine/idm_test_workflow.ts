@@ -102,7 +102,7 @@ export class VirtualMachineManager {
 
         await this.execute(virtInstallCmd);
         this.log(`✅ VM installation launched.`);
-        //await this.execute(`virt-manager`);
+        await this.execute(`virt-manager`);
     }
 
     /**
