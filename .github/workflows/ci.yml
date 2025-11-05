@@ -30,9 +30,9 @@ jobs:
 
       # Step 3: Configure Custom npm Registry
       # This step creates a temporary .npmrc file to use the custom registry for installation
-      - name: Configure Custom NPM Registry
-        run: |
-          echo "registry=${{ env.NPM_REGISTRY }}" > .npmrc
+      #- name: Configure Custom NPM Registry
+      #  run: |
+      #    echo "registry=${{ env.NPM_REGISTRY }}" > .npmrc
           # Assuming the registry doesn't require auth, if it does, you'd add:
           # echo "//ubr-barrel:8081/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> .npmrc
 
