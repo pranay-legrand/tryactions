@@ -142,12 +142,26 @@ export class VirtualMachineManager {
     /**
      * Starts the VM after the OS installation is complete.
      */
+    // async startVmAfterInstall() {
+    //     this.log("--- Starting VM to boot from new OS ---");
+    //     await new Promise(resolve => setTimeout(resolve, 5000));
+    //     await this.execute(`sudo virsh start ${this.config.name}`);
+    //     this.log(`✅ VM '${this.config.name}' started.`);
+    // }
     async startVmAfterInstall() {
-        this.log("--- Starting VM to boot from new OS ---");
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        await this.execute(`sudo virsh start ${this.config.name}`);
-        this.log(`✅ VM '${this.config.name}' started.`);
+    this.log("--- Starting VM to boot from new OS ---");
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    // Check if VM is already running
+    const stateOutput = await this.execute(`sudo virsh domstate ${this.config.name}`).catch(() => "");
+    if (stateOutput.toLowerCase().includes("running")) {
+        this.log(`⚠️ VM '${this.config.name}' is already running — skipping start.`);
+        return;
     }
+
+    await this.execute(`sudo virsh start ${this.config.name}`);
+    this.log(`✅ VM '${this.config.name}' started.`);
+}
 
     /**
      * Polls libvirt to get the VM's IP address.
