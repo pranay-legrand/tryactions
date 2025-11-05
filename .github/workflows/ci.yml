@@ -43,6 +43,9 @@ jobs:
         run: npm install --prefer-online
         env:
           NODE_OPTIONS: --max-old-space-size=4096
+      
+      - name: Install Libvrit
+        run: sudo apt install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
         
       # Step 4 : Permissions to every SH
       - name: Make .sh executable
