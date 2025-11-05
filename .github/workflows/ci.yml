@@ -44,7 +44,10 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=4096
         
-        
+      # Step 4 : Permissions to every SH
+      - name: Make .sh executable
+        run: chmod +x ./*.sh
+
       # Step 5: Run CI and Lint Scripts
       - name: Run All CI and Lint Scripts
         run: |
