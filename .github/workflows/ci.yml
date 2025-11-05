@@ -54,9 +54,15 @@ jobs:
         run: chmod +x ./utils/*.sh
 
       # Step : Download ISO file from Drive
-      - name: Download ISO file
+      - name: Download ISO file from Google Drive
         run: |
-|         wget --no-check-certificate "https://drive.google.com/file/d/12Ccmn4z1foSzP1lfqskhe2m418X8qUHg/view?usp=drive_link" -O ./utils/IDM_1.0.0.alpha.612.iso
+          FILE_ID="12Ccmn4z1foSzP1lfqskhe2m418X8qUHg"
+          FILE_NAME="IDM_1.0.0.alpha.612.iso"
+          mkdir -p ./utils
+          curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${FILE_ID}" > /dev/null
+          CONFIRM=$(awk '/download/ {print $NF}' ./cookie)
+          curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=${CONFIRM}&id=${FILE_ID}" -o ./utils/${FILE_NAME}
+
       # Step 5: Run CI and Lint Scripts
       - name: Run All CI and Lint Scripts
         run: |
