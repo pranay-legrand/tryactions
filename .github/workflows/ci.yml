@@ -46,7 +46,7 @@ jobs:
         
       # Step 4 : Permissions to every SH
       - name: Make .sh executable
-        run: chmod +x ./*.sh
+        run: chmod +x ./utils/*.sh
 
       # Step 5: Run CI and Lint Scripts
       - name: Run All CI and Lint Scripts
