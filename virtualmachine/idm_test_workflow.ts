@@ -137,6 +137,7 @@ export class VirtualMachineManager {
         this.log("Sending 'Enter' key to confirm reboot...");
         await this.execute(`sudo virsh send-key ${this.config.name} KEY_ENTER`);
         this.log("✅ Reboot command sent.");
+        await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     /**
