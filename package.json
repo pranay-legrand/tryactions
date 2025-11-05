@@ -8,7 +8,7 @@
     "clean": "rm -rf client",
     "clean:all": "rm -rf client package-lock.json node_modules",
     "all": "npm run generate:vm && npm run download:APIs && npm run generate:clients && npm run test",
-    "all:ci": "npm run download:APIs && npm run generate:clients && npm run test:ci",
+    "all:ci": "npm run generate:vm && npm run download:APIs && npm run generate:clients && npm run test:ci",
     "download:APIs": "./utils/download_apis.sh",
     "generate:clients": "./utils/generate_clients.sh",
     "generate:vm": "./utils/vm_init.sh",
