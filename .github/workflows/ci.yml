@@ -40,7 +40,10 @@ jobs:
       # The Node memory flag is passed directly to the run command.
       # 'npm install --prefer-online' is roughly equivalent to 'npm install' in a fresh env
       - name: Install Dependencies
-        run: node --max-old-space-size=4096 /usr/bin/npm install --prefer-online
+        run: npm install --prefer-online
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        
         
       # Step 5: Run CI and Lint Scripts
       - name: Run All CI and Lint Scripts
