@@ -170,6 +170,8 @@ export class VirtualMachineManager {
     async getVmIpAddress(timeoutSeconds = 300): Promise<string> {
         this.log("Waiting 30 seconds for installer to complete...");
         await new Promise(resolve => setTimeout(resolve, 30000));
+        const stateOutput = await this.execute(`sudo virsh domstate ${this.config.name}`).catch(() => "");
+        console.log(stateOutput); 
         this.log(`--- Waiting for VM '${this.config.name}' to obtain an IP ---`);
         const start = Date.now();
 
