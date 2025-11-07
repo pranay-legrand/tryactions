@@ -3,6 +3,9 @@ name: CI/CD Test Pipeline
 # Triggers for the workflow, equivalent to the .standard-rules
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+
 
 # Global environment variables
 env:
