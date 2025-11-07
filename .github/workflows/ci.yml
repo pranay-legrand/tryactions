@@ -49,6 +49,9 @@ jobs:
           sudo apt update
           sudo apt install -y qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
           sudo apt install unzip
+          sudo apt install -y python3-pip
+          pip install gdown
+
         
       # Step 4 : Permissions to every SH
       - name: Make .sh executable
@@ -60,9 +63,7 @@ jobs:
           FILE_ID="178MpPbTo3O3hMS9JWhApKx0lQt6IDhfY"
           FILE_NAME="IDM_1.0.0.alpha.612.zip"
           mkdir -p ./utils
-          curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${FILE_ID}" > /dev/null
-          CONFIRM=$(awk '/download/ {print $NF}' ./cookie)
-          curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=${CONFIRM}&id=${FILE_ID}" -o ./utils/${FILE_NAME}
+          gdown https://drive.google.com/uc?id=${FILE_ID} -O ./utils/${FILE_NAME}
           unzip ./utils/${FILE_NAME} -d ./utils/
 
 
