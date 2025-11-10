@@ -1,6 +1,7 @@
 import { exec, ExecOptions } from "child_process";
 import * as fs from "fs";
 
+
 interface VmConfig {
     name: string;
     diskSizeGb: number;
