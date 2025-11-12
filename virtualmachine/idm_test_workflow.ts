@@ -128,8 +128,8 @@ export class VirtualMachineManager {
      */
     async triggerFinalReboot() {
         this.log("--- Attempting to trigger final reboot ---");
-        this.log("Waiting 5 minutes for installer to complete...");
-        await new Promise(resolve => setTimeout(resolve, 300000));
+        this.log("Waiting 7 minutes for installer to complete...");
+        await new Promise(resolve => setTimeout(resolve, 420000));
 
         this.log("Sending 'Tab' key to focus the reboot button...");
         await this.execute(`sudo virsh send-key ${this.config.name} KEY_TAB`);
