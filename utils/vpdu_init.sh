@@ -17,8 +17,24 @@ set -e # Exit immediately if a command exits with a non-zero status.
 
 echo "--- 1. Downloading squashfs package ---"
 PDU_NAME="pdu-x86qemulinux-squashfs-040311-52050.tgz"
-mkdir -p ./virtual_pdu
-wget -P ./virtual_pdu "https://releases.rz.raritan.com/raritan_power/dpx_II/firmware/latest_ga/${PDU_NAME}"
+FILE_ID="1HXPoacqdYDLNfNFMmY3H0xKsbQCSZguR"
+DEST_DIR="./virtual_pdu"
+
+mkdir -p "${DEST_DIR}"
+
+# Try wget first
+if wget -P "${DEST_DIR}" "https://releases.rz.raritan.com/raritan_power/dpx_II/firmware/latest_ga/${PDU_NAME}"; then
+    echo "✅ Downloaded ${PDU_NAME} via wget"
+else
+    echo "⚠️ wget failed, trying gdown..."
+    if gdown "https://drive.google.com/uc?id=${FILE_ID}" -O "${DEST_DIR}/${PDU_NAME}"; then
+        echo "✅ Downloaded ${PDU_NAME} via gdown"
+    else
+        echo "❌ Both wget and gdown failed. Please check your network or links."
+        exit 1
+    fi
+fi
+
 
 echo "--- 2. Unzipping the tgz file ---"
 tar -xvf ./virtual_pdu/${PDU_NAME} -C ./virtual_pdu

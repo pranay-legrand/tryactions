@@ -56,7 +56,6 @@ jobs:
           sudo apt install qemu-kvm
           sudo apt install -y uml-utilities
           sudo apt install python3-pexpect python3-requests
-          sudo apt update
           sudo apt install inetutils-telnet
           pip install gdown
 
