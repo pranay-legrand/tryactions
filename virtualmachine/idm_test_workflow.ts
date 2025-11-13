@@ -192,15 +192,28 @@ export class VirtualMachineManager {
  * @param key The variable name to find (e.g., "ISO_NAME").
  * @returns The value of the variable.
  */
-function readFromConfig(key: string): string {
+function readFromConfig(key: string, config?: Record<string, string>): string {
     const configContent = fs.readFileSync("./test.config", "utf-8");
-    const match = configContent.match(new RegExp(`^${key}="?([^"]+)"?`, "m"));
-    if (!match || !match[1]) {
+    const lines = configContent.split("\n");
+
+    const result: Record<string, string> = config ?? {};
+
+    for (const line of lines) {
+        const match = line.match(/^(\w+)="?([^"]+)"?/);
+        if (match) {
+            result[match[1]] = match[2];
+        }
+    }
+
+    if (!(key in result)) {
         throw new Error(`Could not find '${key}' in test.config`);
     }
-    return match[1];
-}
 
+    // Expand variables like $ISO_NAME
+    return result[key].replace(/\$([A-Za-z_]\w*)/g, (_, varName) => {
+        return result[varName] ?? `$${varName}`;
+    });
+}
 // --- Main ---
 async function main(): Promise<void> {
     // --- 1. Source configuration and prepare ISO ---
