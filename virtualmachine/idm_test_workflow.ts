@@ -144,12 +144,7 @@ export class VirtualMachineManager {
     /**
      * Starts the VM after the OS installation is complete.
      */
-    // async startVmAfterInstall() {
-    //     this.log("--- Starting VM to boot from new OS ---");
-    //     await new Promise(resolve => setTimeout(resolve, 5000));
-    //     await this.execute(`sudo virsh start ${this.config.name}`);
-    //     this.log(`✅ VM '${this.config.name}' started.`);
-    // }
+
     async startVmAfterInstall() {
     this.log("--- Starting VM to boot from new OS ---");
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -192,20 +187,39 @@ export class VirtualMachineManager {
     }
 }
 
+/**
+ * Reads the test.config file and extracts the value of a given key.
+ * @param key The variable name to find (e.g., "ISO_NAME").
+ * @returns The value of the variable.
+ */
+function readFromConfig(key: string): string {
+    const configContent = fs.readFileSync("./test.config", "utf-8");
+    const match = configContent.match(new RegExp(`^${key}="?([^"]+)"?`, "m"));
+    if (!match || !match[1]) {
+        throw new Error(`Could not find '${key}' in test.config`);
+    }
+    return match[1];
+}
+
 // --- Main ---
-async function main(): Promise<string> {
+async function main(): Promise<void> {
+    // --- 1. Source configuration and prepare ISO ---
+    console.error("--- 1. Sourcing configuration ---");
+    const isoDestPath = readFromConfig("ISO_DEST_PATH");
+
     const vmName = "idm-test-vm";
     const vmConfig: VmConfig = {
         name: vmName,
         diskSizeGb: 30,
         ramMb: 4096,
         vcpus: 2,
-        isoPath: "/var/lib/libvirt/images/IDM_1.0.0.alpha.612.iso",
+        isoPath: isoDestPath,
         diskImagePath: `/var/lib/libvirt/images/${vmName}.qcow2`,
     };
 
     const vmManager = new VirtualMachineManager(vmConfig);
 
+    console.error("--- 3. Starting VM creation workflow ---");
     try {
         await vmManager.cleanupVmIfPresent();
         await vmManager.setupEnvironment();
@@ -217,10 +231,12 @@ async function main(): Promise<string> {
         const ip = await vmManager.getVmIpAddress(300);
         if (ip) {
             console.error(`\n✅ Success! VM is ready at IP: ${ip}`);
+            fs.writeFileSync("./.env", `IDM_SYSTEM=${ip}\n`);
+            console.error("   Stored IP in ./.env file.");
             console.error(`   You can SSH into your VM with: ssh arbitrary@${ip}`);
-            return ip;
+        } else {
+            throw new Error("Failed to get VM IP address.");
         }
-        throw new Error("Failed to get VM IP address.");
     } catch (err) {
         if (err instanceof Error) {
             console.error(`\n❌ VM setup failed: ${err.stack}`);
@@ -231,4 +247,5 @@ async function main(): Promise<string> {
     }
 }
 
-main().then(console.log).catch(() => process.exit(1));
+main().then(() => console.log("\n✅ VM setup script finished."))
+    .catch(() => process.exit(1));
