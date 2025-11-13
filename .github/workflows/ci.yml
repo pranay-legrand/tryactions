@@ -72,6 +72,8 @@ jobs:
           mkdir -p ./utils
           gdown https://drive.google.com/uc?id=${FILE_ID} -O ./utils/${FILE_NAME}
           unzip ./utils/${FILE_NAME} -d ./utils/
+          sudo cp "./utils/IDM_1.0.0.alpha.612.iso" "/var/lib/libvirt/images/IDM_1.0.0.alpha.612.iso"
+
 
 
       # Step 5: Run CI and Lint Scripts
