@@ -214,13 +214,12 @@ function readFromConfig(key: string, config?: Record<string, string>): string {
         return result[varName] ?? `$${varName}`;
     });
 }
-// --- Main ---
-async function main(): Promise<void> {
-    // --- 1. Source configuration and prepare ISO ---
-    console.error("--- 1. Sourcing configuration ---");
-    const isoDestPath = readFromConfig("ISO_DEST_PATH");
 
-    const vmName = "idm-test-vm";
+function getVmConfig(): VmConfig {
+    console.error("--- 1. Sourcing configuration ---");
+    const configValues: Record<string, string> = {};
+    const vmName = readFromConfig("VM_NAME", configValues);
+    const isoDestPath = readFromConfig("ISO_DEST_PATH", configValues);
     const vmConfig: VmConfig = {
         name: vmName,
         diskSizeGb: 30,
@@ -229,6 +228,14 @@ async function main(): Promise<void> {
         isoPath: isoDestPath,
         diskImagePath: `/var/lib/libvirt/images/${vmName}.qcow2`,
     };
+    return vmConfig;
+}
+
+// --- Main ---
+async function main(): Promise<void> {
+    // --- 1. Source configuration and prepare ISO ---
+    const vmConfig = getVmConfig();
+    const isoDestPath = vmConfig.isoPath;
 
     const vmManager = new VirtualMachineManager(vmConfig);
 
@@ -260,5 +267,24 @@ async function main(): Promise<void> {
     }
 }
 
-main().then(() => console.log("\n✅ VM setup script finished."))
-    .catch(() => process.exit(1));
+async function cleanup(): Promise<void> {
+    console.error("--- Cleaning up VM ---");
+    const vmConfig = getVmConfig();
+    const vmManager = new VirtualMachineManager(vmConfig);
+    try {
+        await vmManager.cleanupVmIfPresent();
+    } catch (err) {
+        if (err instanceof Error) {
+            console.error(`\n❌ VM cleanup failed: ${err.stack}`);
+        } else {
+            console.error(`\n❌ VM cleanup failed: ${String(err)}`);
+        }
+        throw err;
+    }
+}
+
+if (process.argv[2] === "cleanup") {
+    cleanup().then(() => console.log("\n✅ VM cleanup finished.")).catch(() => process.exit(1));
+} else {
+    main().then(() => console.log("\n✅ VM setup script finished.")).catch(() => process.exit(1));
+}
