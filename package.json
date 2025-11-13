@@ -11,7 +11,7 @@
     "all:ci": "npm run generate:vm && npm run download:APIs && npm run generate:clients && npm run test:ci ",
     "download:APIs": "bash ./utils/download_apis.sh",
     "generate:clients": "bash ./utils/generate_clients.sh",
-    "generate:vm": "sudo npx ts-node ./virtualmachine/idm_test_workflow.ts",
+    "generate:vm": "sudo npx ts-node ./virtualmachine/vm-setup.ts",
     "generate:vpdu": "./utils/vpdu_init.sh",
     "start": "npm run all",
     "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 jest",
