@@ -37,7 +37,8 @@ function main() {
     console.error("❌ Error: Extracted folder not found");
     process.exit(1);
   }else{
-    console.log(`cd ~`);
+    runCommand(`cd ~`);
+    runCommand(`pwd`);
     console.log(`Extracted folder: ${extractedDir}`);
     runCommand(`cd ${extractedDir}`)
   }
