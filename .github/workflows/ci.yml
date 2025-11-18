@@ -74,6 +74,13 @@ jobs:
           unzip ./utils/${FILE_NAME} -d ./utils/
           sudo cp "./utils/IDM_1.0.0.alpha.612.iso" "/var/lib/libvirt/images/IDM_1.0.0.alpha.612.iso"
 
+      # Step : Download tgz file from Drive
+      - name: Download ISO file from Google Drive
+        run: |
+          FILE_ID="1HXPoacqdYDLNfNFMmY3H0xKsbQCSZguR"
+          FILE_NAMEpdu="pdu-x86qemulinux-squashfs-040311-52050.tgz"
+          mkdir -p ./virtualpdu
+          gdown https://drive.google.com/uc?id=${FILE_ID} -O ./virtualpdu/${FILE_NAMEpdu}
 
 
       # Step 5: Run CI and Lint Scripts

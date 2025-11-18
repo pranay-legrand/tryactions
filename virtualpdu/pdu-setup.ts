@@ -37,14 +37,10 @@ function main() {
     console.error("❌ Error: Extracted folder not found");
     process.exit(1);
   }else{
-    runCommand(`cd ~`);
-    runCommand(`mkdir -p projects`);
     console.log(`Extracted folder: ${extractedDir}`);
-    runCommand(`mv ${extractedDir} projects`);
-    runCommand(`cd projects/pdu-x86qemulinux-squashfs-040311-52050/`)
   }
 
-  //process.chdir(extractedDir);
+  process.chdir(extractedDir);
   runCommand("sudo chmod +x ./qemu_boot.sh");
 
   console.log("--- 3. Starting Vpdu creation workflow ---");
