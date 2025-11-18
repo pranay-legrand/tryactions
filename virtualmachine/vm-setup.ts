@@ -146,19 +146,19 @@ export class VirtualMachineManager {
      */
 
     async startVmAfterInstall() {
-    this.log("--- Starting VM to boot from new OS ---");
-    await new Promise(resolve => setTimeout(resolve, 5000));
+        this.log("--- Starting VM to boot from new OS ---");
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-    // Check if VM is already running
-    const stateOutput = await this.execute(`sudo virsh domstate ${this.config.name}`).catch(() => "");
-    if (stateOutput.toLowerCase().includes("running")) {
-        this.log(`⚠️ VM '${this.config.name}' is already running — skipping start.`);
-        return;
+        // Check if VM is already running
+        const stateOutput = await this.execute(`sudo virsh domstate ${this.config.name}`).catch(() => "");
+        if (stateOutput.toLowerCase().includes("running")) {
+            this.log(`⚠️ VM '${this.config.name}' is already running — skipping start.`);
+            return;
+        }
+
+        await this.execute(`sudo virsh start ${this.config.name}`);
+        this.log(`✅ VM '${this.config.name}' started.`);
     }
-
-    await this.execute(`sudo virsh start ${this.config.name}`);
-    this.log(`✅ VM '${this.config.name}' started.`);
-}
 
     /**
      * Polls libvirt to get the VM's IP address.
@@ -210,8 +210,8 @@ function readFromConfig(key: string, config?: Record<string, string>): string {
     }
 
     // Expand variables like $ISO_NAME
-    return result[key].replace(/\$([A-Za-z_]\w*)/g, (_, varName) => {
-        return result[varName] ?? `$${varName}`;
+    return result[key].replace(/\$([A-Za-z_]\w*)/g, (_: string, varName: string) => {
+        return String(result[varName] ?? `$${varName}`);
     });
 }
 
@@ -235,7 +235,6 @@ function getVmConfig(): VmConfig {
 async function main(): Promise<void> {
     // --- 1. Source configuration and prepare ISO ---
     const vmConfig = getVmConfig();
-    const isoDestPath = vmConfig.isoPath;
 
     const vmManager = new VirtualMachineManager(vmConfig);
 
