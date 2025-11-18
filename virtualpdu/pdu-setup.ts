@@ -36,6 +36,9 @@ function main() {
   if (!extractedDir) {
     console.error("❌ Error: Extracted folder not found");
     process.exit(1);
+  }else{
+    console.log(`Extracted folder: ${extractedDir}`);
+    runCommand(`cd ${extractedDir}`)
   }
 
   process.chdir(extractedDir);
