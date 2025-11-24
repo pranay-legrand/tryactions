@@ -7,6 +7,8 @@ interface VmConfig {
     diskSizeGb: number;
     ramMb: number;
     vcpus: number;
+    isoName: string;
+    isoUrl: string;
     isoPath: string;
     diskImagePath: string;
 }
@@ -62,6 +64,25 @@ export class VirtualMachineManager {
         }
         this.log(`✅ Cleanup complete.`);
     }
+
+
+    /**
+     * Download the iso image for creating the virtual disk.
+     */
+
+    async downloadVmIsofile() {
+        this.log("--- Downloading ISO ---");
+        //await this.execute(`wget ${this.config.isoUrl} -O ./tmp/${this.config.isoName}`)
+        await this.execute(`gdown ${this.config.isoUrl} -O ./tmp/${this.config.isoName}`)
+        if (!fs.existsSync("./tmp")) {
+            throw new Error(`Failed to download ISO from ${this.config.isoUrl}`);
+        }
+        fs.renameSync("./tmp", this.config.isoPath);
+        this.log(`✅ ISO downloaded.`);
+
+    }
+
+     
 
     /**
      * Sets up the environment by creating the virtual disk.
@@ -220,11 +241,15 @@ function getVmConfig(): VmConfig {
     const configValues: Record<string, string> = {};
     const vmName = readFromConfig("VM_NAME", configValues);
     const isoDestPath = readFromConfig("ISO_DEST_PATH", configValues);
+    const isoUrl = readFromConfig("ISO_URL", configValues);
+    const isoName = readFromConfig("ISO_NAME", configValues);
     const vmConfig: VmConfig = {
         name: vmName,
         diskSizeGb: 30,
         ramMb: 4096,
         vcpus: 2,
+        isoName: isoName,
+        isoUrl: isoUrl,
         isoPath: isoDestPath,
         diskImagePath: `/var/lib/libvirt/images/${vmName}.qcow2`,
     };
@@ -241,6 +266,7 @@ async function main(): Promise<void> {
     console.error("--- 3. Starting VM creation workflow ---");
     try {
         await vmManager.cleanupVmIfPresent();
+        await vmManager.downloadVmIsofile();
         await vmManager.setupEnvironment();
         await vmManager.defineAndStartVM();
         await vmManager.navigateBootMenu();
