@@ -72,8 +72,8 @@ export class VirtualMachineManager {
 
     async downloadVmIsofile() {
         this.log("--- Downloading ISO ---");
-        //await this.execute(`wget ${this.config.isoUrl} -O ./tmp/${this.config.isoName}`)
-        await this.execute(`gdown ${this.config.isoUrl} -O ./tmp/${this.config.isoName}`)
+        //await this.execute(`wget --no-check-certificate ${this.config.isoUrl} -O /tmp/${this.config.isoName}`)
+        await this.execute(`wget --no-check-certificate ${this.config.isoUrl} -O /tmp/${this.config.isoName}`)
         if (!fs.existsSync("./tmp")) {
             throw new Error(`Failed to download ISO from ${this.config.isoUrl}`);
         }
