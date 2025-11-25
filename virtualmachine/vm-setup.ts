@@ -50,6 +50,9 @@ export class VirtualMachineManager {
     async cleanupVmIfPresent() {
         this.log(`--- Checking for existing VM '${this.config.name}' ---`);
         console.log(await this.execute(`ls -ld /var/lib/libvirt/images`));
+        console.log(await this.execute(`whoami`));
+        console.log(await this.execute(`groups`));
+        console.log(await this.execute(`getent group libvirt`));
         const listOutput = await this.execute(`virsh list --all`).catch(() => "");
         const vmExists = listOutput.includes(this.config.name);
 
