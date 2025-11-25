@@ -82,6 +82,9 @@ export class VirtualMachineManager {
         const extractDir = "/tmp/IDM_extracted";
         try {
             // Download into tmpPath
+            /*
+            The Current file is kept in google drive But we need just change to wget from gdown once we get the website url
+            */
             await this.execute(`gdown ${this.config.isoUrl} -O ${tmpDir}`);
 
             // Identify file type

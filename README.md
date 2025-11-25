@@ -15,7 +15,7 @@ sudo apt install -y qemu-kvm libvirt-daemon libvirt-client virt-install virt-man
 sudo systemctl status libvirtd
 ```
 
-3. Download the IDM Iso file at path "/var/lib/libvirt/images/"
+3. Adjust all permissions for managing permissions "/var/lib/libvirt/images/"
 
 ```sh
 wget <source_URL> -O </var/lib/libvirt/images/"filename">
@@ -27,17 +27,18 @@ onedrive
 
 ```
 
-4. Change the variable ISO_NAME in `test.config` to our ISO file name.
-
+4. Change the variable ISO_NAME & ISO_ISO_URL in `test.config` to our ISO file name.
+5. 
 
 ## How to start
 
 Run command `npm run all` or `npm start` to
 
-- generate the virtual machine and start it to run IDM system on a IP
+- download Iso file and generate virtual disk then from it generate the virtual machine and start it to run IDM system on a IP
 - download the OpenAPI spec files from the demo system
 - generate all required clients
 - run all tests
+- Cleanup tmp files and vm created
 
 ```sh
 npm run all
