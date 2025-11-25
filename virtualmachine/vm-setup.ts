@@ -1,5 +1,7 @@
 import { exec, ExecOptions } from "child_process";
 import * as fs from "fs";
+import { promises as ps } from "fs";
+import path from "path";
 
 
 interface VmConfig {
@@ -47,7 +49,8 @@ export class VirtualMachineManager {
      */
     async cleanupVmIfPresent() {
         this.log(`--- Checking for existing VM '${this.config.name}' ---`);
-        const listOutput = await this.execute(`sudo virsh list --all`).catch(() => "");
+        await this.execute(`ls -ld /var/lib/libvirt/images`);
+        const listOutput = await this.execute(`virsh list --all`).catch(() => "");
         const vmExists = listOutput.includes(this.config.name);
 
         if (!vmExists) {
@@ -56,8 +59,8 @@ export class VirtualMachineManager {
         }
 
         this.log(`⚙️ Cleaning up existing VM '${this.config.name}'...`);
-        await this.execute(`sudo virsh destroy ${this.config.name}`).catch(() => this.log("VM not running — skipping destroy."));
-        await this.execute(`sudo virsh undefine ${this.config.name} --remove-all-storage`).catch(() => this.log("Undefine skipped."));
+        await this.execute(`virsh destroy ${this.config.name}`).catch(() => this.log("VM not running — skipping destroy."));
+        await this.execute(`virsh undefine ${this.config.name} --remove-all-storage`).catch(() => this.log("Undefine skipped."));
         if (fs.existsSync(this.config.diskImagePath)) {
             fs.unlinkSync(this.config.diskImagePath);
             this.log(`Deleted disk image: ${this.config.diskImagePath}`);
@@ -72,17 +75,44 @@ export class VirtualMachineManager {
 
     async downloadVmIsofile() {
         this.log("--- Downloading ISO ---");
-        //await this.execute(`wget --no-check-certificate ${this.config.isoUrl} -O /tmp/${this.config.isoName}`)
-        await this.execute(`wget --no-check-certificate ${this.config.isoUrl} -O /tmp/${this.config.isoName}`)
-        if (!fs.existsSync("./tmp")) {
-            throw new Error(`Failed to download ISO from ${this.config.isoUrl}`);
-        }
-        fs.renameSync("./tmp", this.config.isoPath);
-        this.log(`✅ ISO downloaded.`);
+        const tmpDir = `/tmp/${this.config.isoName}`;
+        const extractDir = "/tmp/IDM_extracted";
+        try {
+            // Download into tmpPath
+            await this.execute(`gdown ${this.config.isoUrl} -O ${tmpDir}`);
 
+            // Identify file type
+            const fileType = await this.execute(`file ${tmpDir}`);
+            console.log("Downloaded file type:", fileType);
+
+            if (fileType.includes("Zip archive")) {
+                // If it's a ZIP, extract it
+                await this.execute(`mkdir -p ${extractDir}`);
+                await this.execute(`unzip -o ${tmpDir} -d ${extractDir}`);
+                await this.execute(`mv ${extractDir}/IDM_*.iso ${tmpDir}`);
+                console.log("Extracted ZIP to:", extractDir);
+
+                const fileType = await this.execute(`file ${tmpDir}`);
+                console.log("Downloaded file type:", fileType);
+            } else if (fileType.includes("ISO 9660")) {
+                // If it's a proper ISO, just return the path
+                console.log("ISO file ready at:", tmpDir);
+                return tmpDir;
+            } else {
+                throw new Error(`Unexpected file type: ${fileType}`);
+            }
+            // Move into final location
+            await ps.rename(tmpDir, this.config.isoPath);
+            this.log(`✅ ISO downloaded to ${this.config.isoPath}`);
+
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                throw new Error(`Failed to download ISO: ${err.message}`);
+            }
+            throw new Error("Failed to download ISO: Unknown error");
+        } 
     }
 
-     
 
     /**
      * Sets up the environment by creating the virtual disk.
@@ -124,7 +154,6 @@ export class VirtualMachineManager {
 
         await this.execute(virtInstallCmd);
         this.log(`✅ VM installation launched.`);
-        await this.execute(`virt-manager`);
     }
 
     /**
@@ -237,7 +266,7 @@ function readFromConfig(key: string, config?: Record<string, string>): string {
 }
 
 function getVmConfig(): VmConfig {
-    console.error("--- 1. Sourcing configuration ---");
+    console.log("--- 1. Sourcing configuration ---");
     const configValues: Record<string, string> = {};
     const vmName = readFromConfig("VM_NAME", configValues);
     const isoDestPath = readFromConfig("ISO_DEST_PATH", configValues);
@@ -263,7 +292,7 @@ async function main(): Promise<void> {
 
     const vmManager = new VirtualMachineManager(vmConfig);
 
-    console.error("--- 3. Starting VM creation workflow ---");
+    console.log("--- 3. Starting VM creation workflow ---");
     try {
         await vmManager.cleanupVmIfPresent();
         await vmManager.downloadVmIsofile();
@@ -275,10 +304,10 @@ async function main(): Promise<void> {
         await vmManager.startVmAfterInstall();
         const ip = await vmManager.getVmIpAddress(300);
         if (ip) {
-            console.error(`\n✅ Success! VM is ready at IP: ${ip}`);
+            console.log(`\n✅ Success! VM is ready at IP: ${ip}`);
             fs.writeFileSync("./.env", `IDM_SYSTEM=${ip}\n`);
-            console.error("   Stored IP in ./.env file.");
-            console.error(`   You can SSH into your VM with: ssh arbitrary@${ip}`);
+            console.log("   Stored IP in ./.env file.");
+            console.log(`   You can SSH into your VM with: ssh arbitrary@${ip}`);
         } else {
             throw new Error("Failed to get VM IP address.");
         }
@@ -292,12 +321,37 @@ async function main(): Promise<void> {
     }
 }
 
+async function cleanupTmp(): Promise<void> {
+    console.log("--- Cleaning up /tmp ---");
+    try {
+        const tmpDir = "/tmp";
+        const files = await ps.readdir(tmpDir);
+        for (const file of files) {
+            const filePath = path.join(tmpDir, file);
+            try {
+                const stat = await ps.lstat(filePath);
+                if (stat.isDirectory()) {
+                    await ps.rm(filePath, { recursive: true, force: true });
+                } else {
+                    await ps.unlink(filePath);
+                }
+            } catch (err) {
+                console.error(`Failed to remove ${filePath}: ${err}`);
+            }
+        }
+    } catch (err) {
+        console.error(`❌ /tmp cleanup failed: ${err}`);
+        throw err;
+    }
+}
+
 async function cleanup(): Promise<void> {
-    console.error("--- Cleaning up VM ---");
+    console.log("--- Cleaning up VM ---");
     const vmConfig = getVmConfig();
     const vmManager = new VirtualMachineManager(vmConfig);
     try {
         await vmManager.cleanupVmIfPresent();
+        await cleanupTmp();
     } catch (err) {
         if (err instanceof Error) {
             console.error(`\n❌ VM cleanup failed: ${err.stack}`);

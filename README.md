@@ -19,8 +19,12 @@ sudo systemctl status libvirtd
 
 ```sh
 wget <source_URL> -O </var/lib/libvirt/images/"filename">
-sudo apt install python3-pexpect python3-requests
-pip install gdown
+sudo apt update
+sudo apt install onedrive -y
+onedrive
+
+
+
 ```
 
 4. Change the variable ISO_NAME in `test.config` to our ISO file name.
